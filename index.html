@@ -1453,11 +1453,11 @@
                 </div>
             </div>
 
-            <div class="settings-group" id="install-app-group" style="display:none; border: 1px dashed var(--green); padding: 10px; border-radius: 8px;">
+            <div class="settings-group" id="install-app-group" style="border: 1px dashed var(--green); padding: 10px; border-radius: 8px;">
                 <span class="settings-label" style="color:var(--green)">Mobile App</span>
                 <div class="setting-row">
                     <span class="setting-name">Install DEX_HUNTER</span>
-                    <button class="btn-refresh" style="background:var(--green); color:var(--bg); padding: 5px 15px;" onclick="installApp()">INSTALL</button>
+                    <button id="btn-install-pwa" class="btn-refresh" style="background:var(--green); color:var(--bg); padding: 5px 15px; display:none;" onclick="installPWA()">INSTALL</button>
                 </div>
             </div>
 
@@ -5028,50 +5028,225 @@
             if (currentTab === 'moneyflow') updateMoneyFlowEngine();
         }, 10000);
 
-        // --- PWA SERVICE WORKER REGISTRATION ---
+        // ===== PWA INSTALL MANAGER =====
+        let deferredPrompt = null;
+        let swRegistered = false;
+
+        // 1. Register Service Worker dengan feedback
         if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js')
-                    .then(reg => console.log('Hunter PWA Ready!', reg.scope))
-                    .catch(err => console.log('PWA Setup Failed:', err));
+            window.addEventListener('load', async () => {
+                try {
+                    const reg = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
+                    swRegistered = true;
+                    console.log('[PWA] SW registered, scope:', reg.scope);
+                } catch (err) {
+                    console.error('[PWA] SW FAILED:', err);
+                    // Tampilkan error di UI
+                    const btn = document.getElementById('btn-install-pwa');
+                    if (btn) {
+                        btn.textContent = 'SW Error';
+                        btn.style.background = 'var(--red)';
+                        btn.style.display = 'block';
+                        btn.title = err.message;
+                    }
+                }
             });
         }
 
-        // --- PWA INSTALL NOTIFICATION ---
-        let deferredPrompt;
+        // 2. Tangkap install prompt SESEGERA MUNGKIN
+        // Listener ini harus di luar DOMContentLoaded dan load event
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
             deferredPrompt = e;
-            // Tampilkan tombol instal di pengaturan
-            const installGroup = getEl('install-app-group');
-            if (installGroup) installGroup.style.display = 'block';
-            
-            updateTicker("APLIKASI DEX_HUNTER SIAP DI-INSTALL DI LAYAR UTAMA 📱", "INFO");
-            console.log('Hunter PWA is ready for installation');
+            console.log('[PWA] Install prompt captured!');
+            const btn = document.getElementById('btn-install-pwa');
+            if (btn) {
+                btn.style.display = 'block';
+                btn.textContent = '⬇ INSTALL APP';
+            }
         });
 
-        async function installApp() {
-            if (!deferredPrompt) return;
-            
-            deferredPrompt.prompt();
-            const { outcome } = await deferredPrompt.userChoice;
-            
-            if (outcome === 'accepted') {
-                console.log('User accepted the install prompt');
-                const installGroup = getEl('install-app-group');
-                if (installGroup) installGroup.style.display = 'none';
+        // 3. Install function dengan feedback lengkap
+        async function installPWA() {
+            const btn = document.getElementById('btn-install-pwa');
+
+            // Debug info
+            console.log('[PWA] installPWA called');
+            console.log('[PWA] deferredPrompt:', deferredPrompt);
+            console.log('[PWA] swRegistered:', swRegistered);
+            console.log('[PWA] isStandalone:', window.matchMedia('(display-mode: standalone)').matches);
+
+            // Sudah terinstall
+            if (window.matchMedia('(display-mode: standalone)').matches) {
+                showPWAToast('App sudah terinstall!', 'green');
+                if (btn) btn.style.display = 'none';
+                return;
             }
-            deferredPrompt = null;
+
+            // Prompt tidak tersedia
+            if (!deferredPrompt) {
+                console.warn('[PWA] No deferred prompt available');
+                // Fallback: guide manual
+                showPWAToast('Tap menu browser lalu "Add to Home Screen"', 'yellow');
+                return;
+            }
+
+            // Trigger prompt
+            try {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                console.log('[PWA] User choice:', outcome);
+
+                if (outcome === 'accepted') {
+                    showPWAToast('App berhasil diinstall!', 'green');
+                    if (btn) btn.style.display = 'none';
+                } else {
+                    showPWAToast('Install dibatalkan', 'yellow');
+                }
+                deferredPrompt = null;
+            } catch (err) {
+                console.error('[PWA] Prompt error:', err);
+                showPWAToast('Gagal: ' + err.message, 'red');
+            }
         }
 
+        // 4. Toast notification
+        function showPWAToast(msg, color) {
+            const colors = { green: '#00ff88', yellow: '#ffcc00', red: '#ff3355' };
+            const toast = document.createElement('div');
+            toast.textContent = msg;
+            toast.style.cssText = `
+                position: fixed;
+                bottom: 80px;
+                left: 50%;
+                transform: translateX(-50%);
+                background: #0a0e18;
+                color: ${colors[color] || '#c8daea'};
+                border: 1px solid ${colors[color] || '#304055'};
+                padding: 10px 20px;
+                border-radius: 6px;
+                font-family: 'IBM Plex Mono', monospace;
+                font-size: .75rem;
+                z-index: 99999;
+                white-space: nowrap;
+            `;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 4000);
+        }
+
+        // 5. Deteksi sudah installed
+        window.addEventListener('appinstalled', () => {
+            console.log('[PWA] App installed successfully!');
+            deferredPrompt = null;
+            showPWAToast('DEX HUNTER berhasil diinstall!', 'green');
+            const btn = document.getElementById('btn-install-pwa');
+            if (btn) btn.style.display = 'none';
+        });
+
+        window.installPWA = installPWA;
+    </script>
+
+    <!-- Share Modal -->
+    <div id="share-modal">
+        <div class="share-content">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 15px;">
+                <span style="font-weight: 800; color: var(--green); letter-spacing: 1px;">BAGIKAN TEMUAN</span>
+                <span style="cursor: pointer; font-size: 20px;" onclick="closeShare()">×</span>
+            </div>
+            
+            <div class="share-preview" id="share-preview"></div>
+            <img id="share-screenshot-preview" />
+            
+            <div class="share-grid">
+                <div class="share-btn" onclick="doShare('download')" style="grid-column: span 3; background: #8800ff; color: #fff; margin-bottom: 5px;"><span>⬇️ DOWNLOAD SCREENSHOT</span></div>
+                <div class="share-btn" onclick="doShare('x')"><span>X (TWITTER)</span></div>
+                <div class="share-btn" onclick="doShare('fb')"><span>FACEBOOK</span></div>
+                <div class="share-btn" onclick="doShare('li')"><span>LINKEDIN</span></div>
+                <div class="share-btn" onclick="doShare('dc')"><span>DISCORD</span></div>
+                <div class="share-btn" onclick="doShare('tt')"><span>TIKTOK</span></div>
+                <div class="share-btn" onclick="doShare('ig')"><span>INSTAGRAM</span></div>
+                <div class="share-btn copy" onclick="doShare('copy')" style="grid-column: span 3; background: var(--green); color: var(--bg);"><span>SALIN PESAN & LINK</span></div>
+            </div>
+            
+            <p style="font-size: 9px; color: var(--dim); margin-top: 15px; text-align: center;">Untuk TikTok & IG, pesan akan disalin. Silakan paste saat posting.</p>
+        </div>
+    </div>
+</body>
+</html>
+            // Sudah terinstall
+            if (window.matchMedia('(display-mode: standalone)').matches) {
+                showPWAToast('App sudah terinstall!', 'green');
+                if (btn) btn.style.display = 'none';
+                return;
+            }
+            deferredPrompt = null;
+
+            // Prompt tidak tersedia
+            if (!deferredPrompt) {
+                console.warn('[PWA] No deferred prompt available');
+                // Fallback: guide manual
+                showPWAToast('Tap menu browser lalu "Add to Home Screen"', 'yellow');
+                return;
+            }
+
+            // Trigger prompt
+            try {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                console.log('[PWA] User choice:', outcome);
+
+                if (outcome === 'accepted') {
+                    showPWAToast('App berhasil diinstall!', 'green');
+                    if (btn) btn.style.display = 'none';
+                } else {
+                    showPWAToast('Install dibatalkan', 'yellow');
+                }
+                deferredPrompt = null;
+            } catch (err) {
+                console.error('[PWA] Prompt error:', err);
+                showPWAToast('Gagal: ' + err.message, 'red');
+            }
+        }
+
+        // 4. Toast notification
+        function showPWAToast(msg, color) {
+            const colors = { green: '#00ff88', yellow: '#ffcc00', red: '#ff3355' };
+            const toast = document.createElement('div');
+            toast.textContent = msg;
+            toast.style.cssText = `
+                position: fixed;
+                bottom: 80px;
+                left: 50%;
+                transform: translateX(-50%);
+                background: #0a0e18;
+                color: ${colors[color] || '#c8daea'};
+                border: 1px solid ${colors[color] || '#304055'};
+                padding: 10px 20px;
+                border-radius: 6px;
+                font-family: 'IBM Plex Mono', monospace;
+                font-size: .75rem;
+                z-index: 99999;
+                white-space: nowrap;
+            `;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 4000);
+        }
+
+        // 5. Deteksi sudah installed
         window.addEventListener('appinstalled', () => {
             console.log('PWA was installed');
             const installGroup = getEl('install-app-group');
             if (installGroup) installGroup.style.display = 'none';
             updateTicker("DEX_HUNTER BERHASIL TERINSTAL ⚡", "SUCCESS");
+            console.log('[PWA] App installed successfully!');
+            deferredPrompt = null;
+            showPWAToast('DEX HUNTER berhasil diinstall!', 'green');
+            const btn = document.getElementById('btn-install-pwa');
+            if (btn) btn.style.display = 'none';
         });
 
         window.installApp = installApp;
+        window.installPWA = installPWA;
     </script>
 
     <!-- Share Modal -->
