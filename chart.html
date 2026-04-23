@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#00ff88">
     <link rel="manifest" href="manifest.json">
-    <title>CHART | DEX HUNTER</title>
+    <title>CHART | DEX_HUNTERv2 Terminal</title>
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;700&family=IBM+Plex+Sans:wght@400;600&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -71,7 +71,10 @@
 
         .stat-card { background: var(--panel); border: 1px solid var(--border); padding: 10px; border-radius: 8px; text-align: center; }
         .stat-label { font-size: 8px; color: var(--dim); text-transform: uppercase; margin-bottom: 4px; display: block; font-weight: 800; }
-        .stat-value { font-size: 12px; font-weight: 700; color: var(--text-bright); font-family: var(--font-mono); }
+        .stat-value { font-size: 1-green); }
+        #stat-mcap { color: var(--blue); }
+        #stat-liq { color: var(--purple); }
+        #stat-vol { color: var(--yellow); }
 
         /* Layout Grid */
         .main-container { display: flex; flex-direction: column; gap: 15px; padding: 10px; }
@@ -213,6 +216,9 @@
                         </div>
                         <button class="btn-sidebar-swap btn-buy-mode" id="btn-buy-full">⚡ EXECUTE SWAP (BUY)</button>
                         <button class="btn-sidebar-swap btn-sell-mode" id="btn-sell-full">💀 DUMP 100% (SELL)</button>
+                    </div>
+                    <div style="text-align:center; margin-top:15px; font-size:10px; color:var(--green); font-weight:700; letter-spacing:0.5px;">
+                        POWERED BY JUPITER
                     </div>
                 </section>
 

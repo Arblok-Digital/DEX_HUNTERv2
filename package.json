@@ -5,9 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "tsx server.ts",
-    "build": "vite build",
+    "build": "npm run clean && vite build",
     "preview": "vite preview",
-    "clean": "rm -rf dist",
+    "clean": "rd /s /q dist || rm -rf dist",
     "lint": "tsc --noEmit"
   },
   "dependencies": {
