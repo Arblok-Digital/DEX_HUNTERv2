@@ -7,9 +7,9 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="manifest" href="manifest.json">
-    <link rel="apple-touch-icon" href="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6">
+    <link rel="apple-touch-icon" href="https://your-app-domain.com/assets/dexhunter-logo-512x512.png">
+    <link rel="icon" href="https://your-app-domain.com/assets/dexhunter-logo-512x512.png">
     <title>DEX_HUNTERv2 | Terminal Berburu Token</title>
-    <link rel="icon" href="data:,">
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;700&family=IBM+Plex+Sans:wght@400;600&display=swap" rel="stylesheet">
     <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
     <style>
@@ -196,15 +196,24 @@
         }
 
         .logo { 
-            color: var(--green); 
-            font-weight: 800; 
+            /* Removed direct text styling, now handled by SVG */
+            /* color: var(--green); */
+            /* font-weight: 800; */
+            /* letter-spacing: 1.5px; */
+            /* display: flex; */
+            /* align-items: center; */
+            /* gap: 6px; */
             font-size: 18px; 
-            letter-spacing: 1.5px; 
-            display: flex; 
-            align-items: center; 
-            gap: 6px; 
+            height: 100%; /* Ensure logo takes full header height */
+            display: flex;
+            align-items: center;
         }
-        .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); box-shadow: 0 0 10px var(--green); }
+        .logo svg {
+            height: 30px; /* Adjust height to fit header */
+            width: auto;
+            margin-right: 5px; /* Space between logo and text if any */
+        }
+        /* .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); box-shadow: 0 0 10px var(--green); } */
 
         .header-right {
             display: flex;
@@ -1307,8 +1316,9 @@
 
     <header>
         <div class="logo">
-            <div class="dot"></div>
-            DEX_HUNTERv2
+            <svg xmlns="http://www.w3.org/2000/svg" width="680" height="680" viewBox="0 0 680 680" role="img">
+                <title>DEX HUNTER v2</title><desc>Logo terminal trading hunter on-chain intelligence</desc><style>.bg{fill:#050f08}.grid-line{stroke:#00ff88;stroke-width:0.5;opacity:.07}.corner{fill:none;stroke:#00ff88;stroke-width:2.5;opacity:.9;stroke-linecap:square}.ring-outer{fill:none;stroke:#00ff88;stroke-width:2;opacity:.25}.ring-mid{fill:none;stroke:#00ff88;stroke-width:1;opacity:.15}.crosshair{fill:none;stroke:#00ff88;stroke-width:1;opacity:.4}.scan-line{stroke:#00ff88;stroke-width:1;opacity:.15}.diamond{fill:none;stroke:#00ff88}.target-dot{fill:#00ff88}.pip{fill:#00ff88}.hex{fill:none;stroke:#00ff88;stroke-width:1;opacity:.2}.data-line{fill:#00ff88;font-family:'Courier New',monospace;font-size:10px;letter-spacing:1px;opacity:.25}.label-main{fill:#00ff88;font-family:'Courier New',monospace;font-weight:700;font-size:52px;letter-spacing:4px}.label-sub{fill:#00ff88;font-family:'Courier New',monospace;font-weight:400;font-size:18px;letter-spacing:12px;opacity:.7}.label-ver{fill:#00ff88;font-family:'Courier New',monospace;font-weight:700;font-size:22px;letter-spacing:2px;opacity:.9}.bracket{fill:none;stroke:#00ff88;stroke-width:2;opacity:.6;stroke-linecap:square}</style><rect width="680" height="680" class="bg"/><line x1="0" y1="170" x2="680" y2="170" class="grid-line"/><line x1="0" y1="340" x2="680" y2="340" class="grid-line"/><line x1="0" y1="510" x2="680" y2="510" class="grid-line"/><line x1="170" y1="0" x2="170" y2="680" class="grid-line"/><line x1="340" y1="0" x2="340" y2="680" class="grid-line"/><line x1="510" y1="0" x2="510" y2="680" class="grid-line"/><line x1="0" y1="0" x2="680" y2="680" class="scan-line"/><line x1="80" y1="0" x2="680" y2="600" class="scan-line" opacity=".07"/><line x1="0" y1="80" x2="600" y2="680" class="scan-line" opacity=".07"/><path d="M60 60 L60 110 M60 60 L110 60" class="corner"/><path d="M620 60 L620 110 M620 60 L570 60" class="corner"/><path d="M60 620 L60 570 M60 620 L110 620" class="corner"/><path d="M620 620 L620 570 M620 620 L570 620" class="corner"/><circle cx="340" cy="310" r="220" class="ring-outer"/><circle cx="340" cy="310" r="185" class="ring-mid"/><circle cx="340" cy="310" r="155" class="ring-outer" opacity=".1"/><line x1="340" y1="90" x2="340" y2="180" class="crosshair"/><line x1="340" y1="440" x2="340" y2="530" class="crosshair"/><line x1="120" y1="310" x2="200" y2="310" class="crosshair"/><line x1="480" y1="310" x2="560" y2="310" class="crosshair"/><line x1="330" y1="155" x2="350" y2="155" class="crosshair" opacity=".6"/><line x1="330" y1="465" x2="350" y2="465" class="crosshair" opacity=".6"/><line x1="215" y1="300" x2="215" y2="320" class="crosshair" opacity=".6"/><line x1="465" y1="300" x2="465" y2="320" class="crosshair" opacity=".6"/><polygon points="340,255 390,305 340,355 290,305" class="diamond" style="opacity:.18;stroke-width:1.5"/><polygon points="340,272 373,305 340,338 307,305" class="diamond" style="opacity:.3;stroke-width:1.5"/><line x1="240" y1="405" x2="420" y2="225" style="stroke:#00ff88;stroke-width:3;opacity:.9;stroke-linecap:round"/><polygon points="420,225 398,234 411,247" style="fill:#00ff88;opacity:.95"/><line x1="240" y1="405" x2="225" y2="425" style="stroke:#00ff88;stroke-width:2;opacity:.6;stroke-linecap:round"/><line x1="240" y1="405" x2="220" y2="405" style="stroke:#00ff88;stroke-width:2;opacity:.6;stroke-linecap:round"/><line x1="240" y1="405" x2="238" y2="428" style="stroke:#00ff88;stroke-width:2;opacity:.4;stroke-linecap:round"/><circle cx="340" cy="305" r="5" class="target-dot" opacity=".9"/><circle cx="340" cy="305" r="12" style="fill:none;stroke:#00ff88;stroke-width:1.5;opacity:.5"/><rect x="148" y="390" width="6" height="30" style="fill:#00ff88;opacity:.5"/><line x1="151" y1="383" x2="151" y2="425" style="stroke:#00ff88;stroke-width:1;opacity:.4"/><rect x="162" y="375" width="6" height="45" style="fill:#00ff88;opacity:.7"/><line x1="165" y1="368" x2="165" y2="425" style="stroke:#00ff88;stroke-width:1;opacity:.5"/><rect x="176" y="385" width="6" height="25" style="fill:#00ff88;opacity:.4"/><line x1="179" y1="378" x2="179" y2="418" style="stroke:#00ff88;stroke-width:1;opacity:.3"/><polygon points="510,140 530,128 550,140 550,164 530,176 510,164" class="hex"/><polygon points="548,118 562,110 576,118 576,136 562,144 548,136" class="hex" opacity=".15"/><polygon points="490,162 498,157 506,162 506,172 498,177 490,172" class="hex" opacity=".15"/><line x1="506" y1="167" x2="510" y2="152" style="stroke:#00ff88;stroke-width:.8;opacity:.2"/><line x1="550" y1="140" x2="548" y2="136" style="stroke:#00ff88;stroke-width:.8;opacity:.2"/><text x="68" y="148" class="data-line">SIG: 0xFF-HUNT</text><text x="68" y="163" class="data-line">NET: +$11.66M</text><text x="68" y="178" class="data-line">CNF: 100 / AMAN</text><text x="430" y="580" class="data-line">CHAIN: SOLANA</text><text x="430" y="595" class="data-line">MODE: ON-CHAIN</text><text x="430" y="610" class="data-line">v2.0.0 STABLE</text><rect x="338" y="88" width="4" height="4" class="pip" opacity=".6"/><rect x="338" y="527" width="4" height="4" class="pip" opacity=".6"/><rect x="118" y="308" width="4" height="4" class="pip" opacity=".6"/><rect x="558" y="308" width="4" height="4" class="pip" opacity=".6"/><text x="340" y="510" text-anchor="middle" class="label-main">DEX_HUNTER</text><rect x="296" y="526" width="88" height="28" rx="2" style="fill:none;stroke:#00ff88;stroke-width:1.5;opacity:.6"/><text x="340" y="545" text-anchor="middle" class="label-ver">v2</text><text x="340" y="598" text-anchor="middle" class="label-sub">ON-CHAIN INTEL</text><path d="M130 620 L130 638 L550 638 L550 620" class="bracket"/><rect x="336" y="633" width="8" height="8" class="pip" opacity=".7"/></svg>
+            <span style="font-size: 18px; font-weight: 800; color: var(--green); letter-spacing: 1.5px;">DEX_HUNTERv2</span>
         </div>
         <div class="header-right">
             <select id="lang-select" class="lang-select" onchange="toggleLanguage(this.value)">
