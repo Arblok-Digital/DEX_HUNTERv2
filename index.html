@@ -1453,6 +1453,14 @@
                 </div>
             </div>
 
+            <div class="settings-group" id="install-app-group" style="display:none; border: 1px dashed var(--green); padding: 10px; border-radius: 8px;">
+                <span class="settings-label" style="color:var(--green)">Mobile App</span>
+                <div class="setting-row">
+                    <span class="setting-name">Install DEX_HUNTER</span>
+                    <button class="btn-refresh" style="background:var(--green); color:var(--bg); padding: 5px 15px;" onclick="installApp()">INSTALL</button>
+                </div>
+            </div>
+
             <div class="settings-group">
                 <span class="settings-label">Suara</span>
                 <div class="setting-row">
@@ -2916,7 +2924,7 @@
                 const gmgnUrl = `https://gmgn.ai/trade/${gmgnChain}/${p.baseToken.address}`;
                 linksHtml = `
                     <div class="alert-links">
-                        <a href="/chart?pair=${p.pairAddress}&token=${p.baseToken.address}&symbol=${p.baseToken.symbol}&chain=${p.chainId}" class="alert-link">CHART</a>
+                        <a href="./chart.html?pair=${p.pairAddress}&token=${p.baseToken.address}&symbol=${p.baseToken.symbol}&chain=${p.chainId}" class="alert-link">CHART</a>
                         <button onclick="openSwap('${p.baseToken.address}','${p.baseToken.symbol}','${p.chainId}')"
                           style="flex:1; background:#0a2a1a;color:#FFD700;font-weight:700;
                                  border:1px solid rgba(0, 255, 136, 0.3);border-radius:6px;padding:6px 4px;cursor:pointer;
@@ -3563,7 +3571,7 @@
                                         </div>
                                         
                                         <div class="alert-links" style="margin-top:10px;">
-                                            <a href="/chart?pair=${wp.pairAddress}&token=${wp.baseToken.address}&symbol=${wp.baseToken.symbol}&chain=${wp.chainId}" class="alert-link" style="font-size:8px; padding:4px;">CHART</a>
+                                            <a href="./chart.html?pair=${wp.pairAddress}&token=${wp.baseToken.address}&symbol=${wp.baseToken.symbol}&chain=${wp.chainId}" class="alert-link" style="font-size:8px; padding:4px;">CHART</a>
                                             <a href="https://gmgn.ai/trade/${wp.chainId === 'solana' ? 'sol' : 'eth'}/${wp.baseToken.address}" target="_blank" class="alert-link" style="color:var(--green); font-size:8px; padding:4px;">GMGN</a>
                                             <button class="alert-link btn-star active" onclick="event.stopPropagation(); toggleWatchlist('${wp.baseToken.address}')" style="font-size:8px; padding:4px; max-width:40px;">UNSTAR</button>
                                         </div>
@@ -4410,7 +4418,7 @@
                 </div>
 
                 <div class="sidebar-links">
-                    <a href="chart.html?pair=${p.pairAddress}&token=${p.baseToken.address}&symbol=${p.baseToken.symbol}&chain=${p.chainId}" class="s-link">CHART</a>
+                    <a href="./chart.html?pair=${p.pairAddress}&token=${p.baseToken.address}&symbol=${p.baseToken.symbol}&chain=${p.chainId}" class="s-link">CHART</a>
                     <a href="https://gmgn.ai/trade/sol/${p.baseToken.address}" target="_blank" class="s-link">GMGN</a>
                     <a href="https://solscan.io/token/${p.baseToken.address}" target="_blank" class="s-link">SOLSCAN</a>
                     <div class="s-link" onclick="openShare('${p.baseToken.address}')" style="cursor:pointer;">SHARE</div>
@@ -4734,7 +4742,7 @@
                     </div>
 
                     <div class="alert-links">
-                        <a href="/chart?pair=${p.pairAddress}&token=${p.baseToken.address}&symbol=${p.baseToken.symbol}&chain=${p.chainId}" class="alert-link">CHART</a>
+                            <a href="./chart.html?pair=${p.pairAddress}&token=${p.baseToken.address}&symbol=${p.baseToken.symbol}&chain=${p.chainId}" class="alert-link">CHART</a>
                         <button onclick="openSwap('${p.baseToken.address}','${p.baseToken.symbol}','${p.chainId}')"
                           style="flex:1; background:#0a2a1a;color:#FFD700;font-weight:700;
                                  border:1px solid rgba(0, 255, 136, 0.3);border-radius:6px;padding:6px 4px;cursor:pointer;
@@ -5023,7 +5031,7 @@
         // --- PWA SERVICE WORKER REGISTRATION ---
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js')
+                navigator.serviceWorker.register('./sw.js')
                     .then(reg => console.log('Hunter PWA Ready!', reg.scope))
                     .catch(err => console.log('PWA Setup Failed:', err));
             });
@@ -5034,9 +5042,36 @@
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
             deferredPrompt = e;
+            // Tampilkan tombol instal di pengaturan
+            const installGroup = getEl('install-app-group');
+            if (installGroup) installGroup.style.display = 'block';
+            
             updateTicker("APLIKASI DEX_HUNTER SIAP DI-INSTALL DI LAYAR UTAMA 📱", "INFO");
             console.log('Hunter PWA is ready for installation');
         });
+
+        async function installApp() {
+            if (!deferredPrompt) return;
+            
+            deferredPrompt.prompt();
+            const { outcome } = await deferredPrompt.userChoice;
+            
+            if (outcome === 'accepted') {
+                console.log('User accepted the install prompt');
+                const installGroup = getEl('install-app-group');
+                if (installGroup) installGroup.style.display = 'none';
+            }
+            deferredPrompt = null;
+        }
+
+        window.addEventListener('appinstalled', () => {
+            console.log('PWA was installed');
+            const installGroup = getEl('install-app-group');
+            if (installGroup) installGroup.style.display = 'none';
+            updateTicker("DEX_HUNTER BERHASIL TERINSTAL ⚡", "SUCCESS");
+        });
+
+        window.installApp = installApp;
     </script>
 
     <!-- Share Modal -->
