@@ -7,8 +7,8 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="manifest" href="manifest.json">
-    <link rel="apple-touch-icon" href="https://your-app-domain.com/assets/dexhunter-logo-512x512.png">
-    <link rel="icon" href="https://your-app-domain.com/assets/dexhunter-logo-512x512.png">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22512%22%20height%3D%22512%22%20viewBox%3D%220%200%20680%20680%22%3E%3Crect%20width%3D%22680%22%20height%3D%22680%22%20fill%3D%22%23050f08%22%2F%3E%3Cpath%20d%3D%22M60%2060l50%200M60%2060l0%2050M620%2060l-50%200M620%2060l0%2050M60%20620l50%200M60%20620l0-50M620%20620l-50%200M620%20620l0-50%22%20stroke%3D%22%2300ff88%22%20stroke-width%3D%222.5%22%20fill%3D%22none%22%2F%3E%3Ccircle%20cx%3D%22340%22%20cy%3D%22310%22%20r%3D%22220%22%20stroke%3D%22%2300ff88%22%20stroke-width%3D%222%22%20fill%3D%22none%22%20opacity%3D%22.25%22%2F%3E%3Ctext%20x%3D%22340%22%20y%3D%22510%22%20text-anchor%3D%22middle%22%20fill%3D%22%2300ff88%22%20font-family%3D%22monospace%22%20font-weight%3D%22700%22%20font-size%3D%2252%22%3EDEX_HUNTER%3C%2Ftext%3E%3C%2Fsvg%3E">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2232%22%20height%3D%2232%22%3E%3Ccircle%20cx%3D%2216%22%20cy%3D%2216%22%20r%3D%2214%22%20fill%3D%22%23050f08%22%20stroke%3D%22%2300ff88%22%20stroke-width%3D%222%22%2F%3E%3Cpath%20d%3D%22M10%2016l12%200M16%2010l0%2012%22%20stroke%3D%22%2300ff88%22%20stroke-width%3D%221%22%2F%3E%3C%2Fsvg%3E">
     <title>DEX_HUNTERv2 | Terminal Berburu Token</title>
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;700&family=IBM+Plex+Sans:wght@400;600&display=swap" rel="stylesheet">
     <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
@@ -2917,7 +2917,7 @@
                 const gmgnUrl = `https://gmgn.ai/trade/${gmgnChain}/${p.baseToken.address}`;
                 linksHtml = `
                     <div class="alert-links">
-                        <a href="chart.html?pair=${p.pairAddress}&token=${p.baseToken.address}&symbol=${p.baseToken.symbol}&chain=${p.chainId}" class="alert-link">CHART</a>
+                        <a href="/chart?pair=${p.pairAddress}&token=${p.baseToken.address}&symbol=${p.baseToken.symbol}&chain=${p.chainId}" class="alert-link">CHART</a>
                         <button onclick="openSwap('${p.baseToken.address}','${p.baseToken.symbol}','${p.chainId}')"
                           style="flex:1; background:#0a2a1a;color:#FFD700;font-weight:700;
                                  border:1px solid rgba(0, 255, 136, 0.3);border-radius:6px;padding:6px 4px;cursor:pointer;
@@ -3564,7 +3564,7 @@
                                         </div>
                                         
                                         <div class="alert-links" style="margin-top:10px;">
-                                            <a href="chart.html?pair=${wp.pairAddress}&token=${wp.baseToken.address}&symbol=${wp.baseToken.symbol}&chain=${wp.chainId}" class="alert-link" style="font-size:8px; padding:4px;">CHART</a>
+                                            <a href="/chart?pair=${wp.pairAddress}&token=${wp.baseToken.address}&symbol=${wp.baseToken.symbol}&chain=${wp.chainId}" class="alert-link" style="font-size:8px; padding:4px;">CHART</a>
                                             <a href="https://gmgn.ai/trade/${wp.chainId === 'solana' ? 'sol' : 'eth'}/${wp.baseToken.address}" target="_blank" class="alert-link" style="color:var(--green); font-size:8px; padding:4px;">GMGN</a>
                                             <button class="alert-link btn-star active" onclick="event.stopPropagation(); toggleWatchlist('${wp.baseToken.address}')" style="font-size:8px; padding:4px; max-width:40px;">UNSTAR</button>
                                         </div>
@@ -4735,7 +4735,7 @@
                     </div>
 
                     <div class="alert-links">
-                        <a href="chart.html?pair=${p.pairAddress}&token=${p.baseToken.address}&symbol=${p.baseToken.symbol}&chain=${p.chainId}" class="alert-link">CHART</a>
+                        <a href="/chart?pair=${p.pairAddress}&token=${p.baseToken.address}&symbol=${p.baseToken.symbol}&chain=${p.chainId}" class="alert-link">CHART</a>
                         <button onclick="openSwap('${p.baseToken.address}','${p.baseToken.symbol}','${p.chainId}')"
                           style="flex:1; background:#0a2a1a;color:#FFD700;font-weight:700;
                                  border:1px solid rgba(0, 255, 136, 0.3);border-radius:6px;padding:6px 4px;cursor:pointer;
@@ -5029,6 +5029,15 @@
                     .catch(err => console.log('PWA Setup Failed:', err));
             });
         }
+
+        // --- PWA INSTALL NOTIFICATION ---
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            updateTicker("APLIKASI DEX_HUNTER SIAP DI-INSTALL DI LAYAR UTAMA 📱", "INFO");
+            console.log('Hunter PWA is ready for installation');
+        });
     </script>
 
     <!-- Share Modal -->
