@@ -1350,7 +1350,7 @@
         </div>
         <div class="filter-group">
             <span class="filter-label" id="lbl-minliq">MIN LIQ:</span>
-            <input type="number" id="min-liq" value="5000" step="1000" onchange="applyFilters()">
+            <input type="number" id="min-liq" value="1000" step="500" onchange="applyFilters()">
         </div>
         <div class="filter-group">
             <span class="filter-label" id="lbl-minscore">SKOR MIN:</span>
@@ -2360,6 +2360,47 @@
             }
         }
 
+        async function fetchFromGeckoTerminal(chain) {
+            const netMap = { 'ethereum': 'eth', 'solana': 'solana', 'base': 'base', 'arbitrum': 'arbitrum' };
+            const gtNet = netMap[chain] || 'solana';
+            try {
+                const res = await fetchWithRetry(`https://api.geckoterminal.com/api/v2/networks/${gtNet}/trending_pools?include=base_token`, { timeout: 10000 });
+                const json = await res.json();
+                if (!json.data || !Array.isArray(json.data)) return { pairs: [] };
+                
+                const pairs = json.data.map(pool => {
+                    const attr = pool.attributes;
+                    const baseTokenRef = pool.relationships?.base_token?.data;
+                    const baseTokenInfo = json.included?.find(inc => inc.id === baseTokenRef?.id);
+                    return {
+                        pairAddress: attr.address,
+                        baseToken: {
+                            address: baseTokenInfo?.attributes?.address || '',
+                            symbol: baseTokenInfo?.attributes?.symbol || attr.name.split(' / ')[0],
+                            name: baseTokenInfo?.attributes?.name || attr.name.split(' / ')[0]
+                        },
+                        chainId: chain === 'all' ? 'solana' : chain,
+                        priceUsd: attr.base_token_price_usd,
+                        fdv: attr.fdv_usd,
+                        liquidity: { usd: attr.reserve_in_usd },
+                        volume: { h24: attr.volume_usd.h24, h1: attr.volume_usd.h1, m5: attr.volume_usd.m5 },
+                        priceChange: { 
+                            h24: parseFloat(attr.price_change_percentage.h24 || 0), 
+                            h1: parseFloat(attr.price_change_percentage.h1 || 0), 
+                            m5: parseFloat(attr.price_change_percentage.m5 || 0) 
+                        },
+                        txns: { 
+                            h24: { buys: parseInt(attr.transactions.h24?.buys || 0), sells: parseInt(attr.transactions.h24?.sells || 0) },
+                            m5: { buys: parseInt(attr.transactions.m5?.buys || 0), sells: parseInt(attr.transactions.m5?.sells || 0) }
+                        },
+                        pairCreatedAt: attr.pool_created_at ? new Date(attr.pool_created_at).getTime() : Date.now(),
+                        url: `https://www.geckoterminal.com/${gtNet}/pools/${attr.address}`
+                    };
+                });
+                return { pairs };
+            } catch (e) { console.error("GeckoTerminal API Error:", e); return { pairs: [] }; }
+        }
+
         async function scan() {
             scanCounter++; // Increment cycle
             setTxt('last-scan', new Date().toLocaleTimeString('id-ID'));
@@ -2388,74 +2429,58 @@
                     }
                 }
 
-                // 2. Fetch main feed data
-                if (currentTab === 'watchlist' && watchlistData) {
-                    data = watchlistData;
-                } else {
-                    // Try DexScreener Boosts (Latest & Top)
-                    try {
-                        // Fetch both Latest & Top for better diversity
-                        const [resLatest, resTop] = await Promise.all([
-                            fetchWithRetry(API_BOOSTS_LATEST + cb),
-                            fetchWithRetry(API_BOOSTS + cb)
-                        ]);
-                        
-                        const boostsLatest = await resLatest.json();
-                        const boostsTop = await resTop.json();
-                        
-                        // Merge and prioritize Latest to keep the feed fresh
-                        const allBoosts = [...(boostsLatest || []), ...(boostsTop || [])];
-                        // Deduplicate by tokenAddress
-                        const uniqueBoosts = [];
-                        const seenAddrs = new Set();
-                        for (const b of allBoosts) {
-                            if (!seenAddrs.has(b.tokenAddress)) {
-                                seenAddrs.add(b.tokenAddress);
-                                uniqueBoosts.push(b);
-                            }
-                        }
+                // 2. Aggressive Multi-Source gathering (Boosts, Profiles, and Trending Volume)
+                if (currentTab !== 'watchlist') {
+                    const query = currentChain === 'all' ? 'solana' : currentChain;
+                    const [resLatest, resTop, resProfiles, resTrending] = await Promise.all([
+                        fetchWithRetry(API_BOOSTS_LATEST + cb).then(r => r.json()).catch(() => []),
+                        fetchWithRetry(API_BOOSTS + cb).then(r => r.json()).catch(() => []),
+                        fetchWithRetry(API_PROFILES + cb).then(r => r.json()).catch(() => []),
+                        fetchWithRetry(API_SEARCH + query + cb).then(r => r.json()).catch(() => ({ pairs: [] }))
+                    ]);
+                    
+                    lastBoosts = resLatest || [];
+                    const sourceAddrs = new Set();
+                    
+                    // Gabungkan alamat unik dari sumber Discovery (Boosts & Profiles)
+                    [...(resLatest || []), ...(resTop || []), ...(resProfiles || [])].forEach(b => {
+                        const addr = b.tokenAddress || b.address;
+                        if (addr && typeof addr === 'string') sourceAddrs.add(addr);
+                    });
 
-                        if (uniqueBoosts.length > 0) {
-                            lastBoosts = uniqueBoosts;
-                            // Take top 35 for detailed analysis
-                            const addresses = uniqueBoosts.slice(0, 35).map(b => b.tokenAddress);
-                            const detailRes = await fetchWithRetry(`https://api.dexscreener.com/latest/dex/tokens/${addresses.join(',')}${cb}`);
-                            data = await detailRes.json();
-                        }
-                    } catch (e) {
-                        console.warn('DexScreener Boosts failed, trying Profiles...');
-                    }
-
-                    // Fallback to Profiles (adding cache buster)
-                    if (!data || !data.pairs || data.pairs.length === 0) {
+                    // Ambil detail koin dari Discovery (Limit 30 agar stabil)
+                    const targetAddrs = Array.from(sourceAddrs).slice(0, 30);
+                    let detailData = { pairs: [] };
+                    
+                    if (targetAddrs.length > 0) {
                         try {
-                            const res = await fetchWithRetry(API_PROFILES + cb);
-                            const profiles = await res.json();
-                            if (profiles && profiles.length > 0) {
-                                const pairsToFetch = profiles.slice(0, 20).map(p => p.tokenAddress);
-                                const detailRes = await fetchWithRetry(`https://api.dexscreener.com/latest/dex/tokens/${pairsToFetch.join(',')}${cb}`);
-                                data = await detailRes.json();
-                            }
-                        } catch (e) {}
+                            const detailRes = await fetchWithRetry(`https://api.dexscreener.com/latest/dex/tokens/${targetAddrs.join(',')}${cb}`);
+                            detailData = await detailRes.json();
+                        } catch (e) { console.warn("Discovery detail fetch failed", e); }
                     }
-
-                    // Fallback to Search
-                    if (!data || !data.pairs || data.pairs.length === 0) {
-                        const query = currentChain === 'all' ? 'solana' : currentChain;
-                        const res = await fetchWithRetry(API_SEARCH + query + '&cb=' + Date.now());
-                        data = await res.json();
-                    }
+                    
+                    // Gabungkan hasil detail dengan hasil pencarian trending (volume tinggi)
+                    // resTrending.pairs biasanya sudah berisi data koin dengan volume/aktivitas tinggi
+                    const allFoundPairs = [
+                        ...(detailData.pairs || []), 
+                        ...(resTrending.pairs || [])
+                    ];
+                    
+                    data = { pairs: allFoundPairs };
+                } else {
+                    data = watchlistData;
                 }
 
-                // 3. If DexScreener still fails, try GMGN (Simulated Fallback for UI)
+                // 3. If DexScreener still fails or returns few results, try GeckoTerminal (Reliable Fallback)
                 if (!data || !data.pairs || data.pairs.length === 0) {
-                    currentSource = 'GMGN/BIRDEYE';
-                    setTxt('data-source', currentSource);
-                    const ds2 = getEl('data-source');
-                    if (ds2) ds2.style.color = 'var(--yellow)';
-                    
-                    const lastResort = await fetchWithRetry(`https://api.dexscreener.com/latest/dex/search?q=trending`);
-                    data = await lastResort.json();
+                    const gtData = await fetchFromGeckoTerminal(currentChain === 'all' ? 'solana' : currentChain);
+                    if (gtData && gtData.pairs && gtData.pairs.length > 0) {
+                        data = gtData;
+                        currentSource = 'GECKOTERMINAL';
+                        setTxt('data-source', currentSource);
+                        const ds2 = getEl('data-source');
+                        if (ds2) ds2.style.color = 'var(--purple)';
+                    }
                 }
                 
                 // Combine main data with watchlist data to ensure all are processed
