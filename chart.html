@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CHART | DEX HUNTER</title>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;700&family=IBM+Plex+Sans:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #000000;
+            --panel: #0a0a0a;
+            --green: #00ff88; 
+            --red: #ff3355;
+            --yellow: #ffcc00;
+            --blue: #00aaff;
+            --dim: #304055;
+            --text: #8aa0b8;
+            --text-bright: #ffffff;
+            --border: #141a27;
+            --font-mono: 'IBM Plex Mono', monospace;
+            --font-sans: 'IBM Plex Sans', sans-serif;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; line-height: 1.4; letter-spacing: 0.3px; }
+        body { background: var(--bg); color: var(--text); font-family: var(--font-sans); overflow-x: hidden; }
+        .mono { font-family: var(--font-mono); }
+
+        header {
+            height: 50px;
+            background: var(--panel);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            padding: 0 15px;
+            gap: 15px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .back-btn {
+            background: none;
+            border: 1px solid var(--border);
+            color: var(--text-bright);
+            padding: 5px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 18px;
+            transition: all 0.2s;
+        }
+        .back-btn:hover { border-color: var(--green); color: var(--green); }
+
+        .token-header { display: flex; align-items: center; gap: 8px; flex: 1; }
+        .token-symbol { font-weight: 800; color: var(--text-bright); font-size: 1.1rem; text-transform: uppercase; }
+        .chain-badge { font-size: 9px; font-weight: 800; text-transform: uppercase; padding: 2px 6px; border-radius: 4px; background: rgba(0, 170, 255, 0.1); color: var(--blue); border: 1px solid var(--blue); }
+        
+        .live-price { text-align: right; }
+        .price-val { display: block; font-weight: 800; color: var(--green); font-family: var(--font-mono); font-size: 14px; }
+        .price-label { font-size: 8px; color: var(--dim); text-transform: uppercase; font-weight: 700; }
+
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            padding: 10px;
+        }
+        @media (min-width: 600px) { .stats-row { grid-template-columns: repeat(4, 1fr); } }
+
+        .stat-card { background: var(--panel); border: 1px solid var(--border); padding: 8px; border-radius: 6px; text-align: center; }
+        .stat-label { font-size: 8px; color: var(--dim); text-transform: uppercase; margin-bottom: 4px; display: block; font-weight: 800; }
+        .stat-value { font-size: 12px; font-weight: 700; color: var(--text-bright); font-family: var(--font-mono); }
+
+        .chart-container { width: 100%; background: #000; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+        iframe { width: 100%; border: none; height: 45vh; display: block; }
+
+        .tf-selector { 
+            display: flex; 
+            justify-content: flex-start; 
+            gap: 5px; 
+            padding: 10px; 
+            background: var(--panel); 
+            overflow-x: auto; 
+            scrollbar-width: none; 
+            -ms-overflow-style: none;
+            white-space: nowrap;
+        }
+        .tf-selector::-webkit-scrollbar { display: none; }
+
+        .tf-btn {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            color: var(--dim);
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+        .tf-btn.active { color: var(--green); border-color: var(--green); background: rgba(0, 255, 136, 0.05); }
+
+        .info-section { padding: 10px 15px 20px 15px; }
+        .ca-box { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 8px; margin-bottom: 10px; }
+        .ca-header { display: flex; justify-content: space-between; margin-bottom: 8px; align-items: center; }
+        .ca-val { font-family: var(--font-mono); font-size: 11px; word-break: break-all; color: var(--text-bright); background: rgba(0,0,0,0.3); padding: 8px; border-radius: 4px; }
+        .copy-btn { background: var(--green); border: none; color: #000; padding: 4px 10px; border-radius: 4px; font-size: 10px; cursor: pointer; font-weight: 800; }
+
+        /* Hunter Command Center Styles */
+        .command-center { padding: 8px 12px; background: var(--panel); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); margin: 5px 0; }
+        .sidebar-label { font-size: 9px; color: var(--dim); font-weight: 800; margin-bottom: 5px; display: block; text-transform: uppercase; letter-spacing: 1px; }
+        .sidebar-value { font-family: var(--font-mono); font-weight: 700; font-size: 13px; color: #fff; }
+        .input-group { margin-bottom: 5px; }
+        .manual-buy-input {
+            width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 8px;
+            color: #fff; font-family: var(--font-mono); font-size: 13px; margin-bottom: 8px; outline: none; transition: border 0.2s;
+        }
+        .manual-buy-input:focus { border-color: var(--green); }
+        .btn-sidebar-swap {
+            width: 100%; padding: 10px; border-radius: 6px; font-weight: 800; font-size: 12px; cursor: pointer; border: none;
+            font-family: inherit; margin-bottom: 8px; transition: all 0.2s; text-transform: uppercase;
+        }
+        .btn-buy-mode { background: #0a2a1a; color: #FFD700; border: 1px solid rgba(0, 255, 136, 0.3) !important; }
+        .btn-sell-mode { background: var(--red); color: #fff; }
+        .btn-quick-group { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 15px; }
+        .btn-quick {
+            background: rgba(0,255,136,0.1); color: var(--green); border: 1px solid rgba(0,255,136,0.3);
+            border-radius: 6px; padding: 6px; font-size: 9px; font-weight: 700; cursor: pointer; font-family: inherit; text-align: center;
+        }
+        .est-box { background: rgba(0,255,136,0.05); border: 1px dashed var(--green); padding: 8px; border-radius: 8px; margin-bottom: 10px; }
+
+        .external-links { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
+        .ext-link {
+            background: var(--panel); border: 1px solid var(--border); color: var(--text);
+            text-decoration: none; text-align: center; padding: 12px; border-radius: 6px; font-size: 11px; font-weight: 700;
+        }
+
+        .error-overlay { position: fixed; inset: 0; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; text-align: center; z-index: 1000; }
+    </style>
+</head>
+<body>
+    <div id="error-screen" class="error-overlay" style="display:none;">
+        <div style="font-size:48px; margin-bottom:20px;">🕵️</div>
+        <h2 style="color:var(--text-bright); margin-bottom:10px;">Token tidak ditemukan</h2>
+        <a href="index.html" class="back-btn" style="font-size:14px; padding:12px 24px;">KEMBALI KE TERMINAL</a>
+    </div>
+
+    <header>
+        <a href="index.html" class="back-btn">←</a>
+        <div class="token-header">
+            <span id="header-symbol" class="token-symbol">...</span>
+            <span id="header-chain" class="chain-badge">...</span>
+        </div>
+        <div class="live-price">
+            <span class="price-label">Live Price</span>
+            <span id="header-price" class="price-val">...</span>
+        </div>
+    </header>
+
+    <main>
+        <div class="stats-row">
+            <div class="stat-card"><span class="stat-label">Price</span><span id="stat-price" class="stat-value">...</span></div>
+            <div class="stat-card"><span class="stat-label">Market Cap</span><span id="stat-mcap" class="stat-value">...</span></div>
+            <div class="stat-card"><span class="stat-label">Liquidity</span><span id="stat-liq" class="stat-value">...</span></div>
+            <div class="stat-card"><span class="stat-label">Volume 24H</span><span id="stat-vol" class="stat-value">...</span></div>
+        </div>
+
+        <div class="tf-selector">
+            <button class="tf-btn" onclick="setTimeframe('1m')">1M</button>
+            <button class="tf-btn active" onclick="setTimeframe('5m')">5M</button>
+            <button class="tf-btn" onclick="setTimeframe('15m')">15M</button>
+            <button class="tf-btn" onclick="setTimeframe('1h')">1H</button>
+            <button class="tf-btn" onclick="setTimeframe('4h')">4H</button>
+            <button class="tf-btn" onclick="setTimeframe('1d')">1D</button>
+        </div>
+
+        <div class="chart-container"><iframe id="gt-chart"></iframe></div>
+
+        <!-- Integrated Hunter Command Center -->
+        <section class="command-center">
+            <div class="sidebar-label">HUNTER COMMAND CENTER (LIVE)</div>
+            
+            <div class="input-group">
+                <input type="number" id="manual-sol-amount" class="manual-buy-input" placeholder="0.1" step="0.1" value="0.1" oninput="updateEstimatedTokens()">
+                
+                <div class="btn-quick-group">
+                    <button class="btn-quick" onclick="setManualAmount(0.1)">0.1 SOL</button>
+                    <button class="btn-quick" onclick="setManualAmount(0.5)">0.5 SOL</button>
+                    <button class="btn-quick" onclick="setManualAmount(1.0)">1.0 SOL</button>
+                </div>
+
+                <div class="est-box">
+                    <div class="sidebar-label" style="color:var(--green)">ESTIMATED RECEIVED</div>
+                    <div id="sidebar-est-tokens" class="sidebar-value" style="font-size:16px;">≈ 0.00 ...</div>
+                </div>
+
+                <button class="btn-sidebar-swap btn-buy-mode" id="btn-buy-full">⚡ EXECUTE SWAP (BUY)</button>
+                <button class="btn-sidebar-swap btn-sell-mode" id="btn-sell-full">💀 DUMP 100% (SELL)</button>
+            </div>
+        </section>
+
+        <div class="info-section">
+            <div class="ca-box">
+                <div class="ca-header"><span class="stat-label">Contract Address</span><button class="copy-btn" id="btn-copy">COPY</button></div>
+                <div id="token-ca" class="ca-val">...</div>
+            </div>
+            <div class="external-links">
+                <a id="link-dexs" href="#" target="_blank" class="ext-link">DEXSCREENER</a>
+                <a id="link-birdeye" href="#" target="_blank" class="ext-link">BIRDEYE</a>
+            </div>
+        </div>
+
+    <script>
+        const params = new URLSearchParams(window.location.search);
+        const pairAddr = params.get('pair');
+        const tokenAddr = params.get('token');
+        const symbol = params.get('symbol');
+        const chainId = params.get('chain');
+
+        if (!pairAddr || !tokenAddr || !symbol || !chainId) {
+            document.getElementById('error-screen').style.display = 'flex';
+        }
+
+        document.getElementById('header-symbol').innerText = symbol;
+        document.getElementById('header-chain').innerText = chainId;
+        document.getElementById('token-ca').innerText = tokenAddr;
+        document.getElementById('link-dexs').href = `https://dexscreener.com/${chainId}/${tokenAddr}`;
+        document.getElementById('link-birdeye').href = `https://birdeye.so/token/${tokenAddr}?chain=${chainId === 'solana' ? 'solana' : 'ethereum'}`;
+
+        const iframe = document.getElementById('gt-chart');
+        let currentTf = '5m';
+        const gtChain = chainId === 'ethereum' ? 'eth' : chainId;
+        let tokenPrice = 0;
+        let solPrice = 160;
+
+        function updateChart() {
+            iframe.src = `https://www.geckoterminal.com/${gtChain}/pools/${pairAddr}?embed=1&info=0&swaps=0&theme=dark&interval=${currentTf}`;
+        }
+        updateChart();
+
+        function setTimeframe(tf) {
+            currentTf = tf;
+            document.querySelectorAll('.tf-btn').forEach(b => b.classList.toggle('active', b.innerText.toLowerCase() === tf));
+            updateChart();
+        }
+
+        const fN = (n) => {
+            if (n === undefined || n === null || isNaN(n)) return '0';
+            const absN = Math.abs(n);
+            if (absN >= 1e9) return (absN / 1e9).toFixed(2) + 'B';
+            if (absN >= 1e6) return (absN / 1e6).toFixed(2) + 'M';
+            if (absN >= 1e3) return (absN / 1e3).toFixed(2) + 'K';
+            if (absN < 1 && absN > 0) return absN.toFixed(4);
+            return absN.toFixed(2);
+        };
+
+        async function fetchStats() {
+            try {
+                const res = await fetch(`https://api.dexscreener.com/latest/dex/pairs/${chainId}/${pairAddr}`);
+                const data = await res.json();
+                if (data.pairs && data.pairs[0]) {
+                    const p = data.pairs[0];
+                    tokenPrice = parseFloat(p.priceUsd);
+                    const prS = tokenPrice < 0.0001 ? tokenPrice.toFixed(10) : tokenPrice.toFixed(6);
+                    document.getElementById('header-price').innerText = '$' + prS;
+                    document.getElementById('stat-price').innerText = '$' + prS;
+                    document.getElementById('stat-mcap').innerText = '$' + fN(p.fdv);
+                    document.getElementById('stat-liq').innerText = '$' + fN(p.liquidity?.usd);
+                    document.getElementById('stat-vol').innerText = '$' + fN(p.volume?.h24);
+                    updateEstimatedTokens();
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        async function fetchSolPrice() {
+            try {
+                const res = await fetch("https://api.bybit.com/v5/market/tickers?category=spot&symbol=SOLUSDT");
+                const data = await res.json();
+                if (data.result?.list?.[0]) {
+                    solPrice = parseFloat(data.result.list[0].lastPrice);
+                    updateEstimatedTokens();
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        function updateEstimatedTokens() {
+            const amtInput = document.getElementById('manual-sol-amount');
+            const display = document.getElementById('sidebar-est-tokens');
+            if (!amtInput || !display || !tokenPrice) return;
+            
+            const solAmt = parseFloat(amtInput.value) || 0;
+            const est = (solAmt * solPrice) / tokenPrice;
+            
+            display.innerText = `≈ ${fN(est)} ${symbol}`;
+        }
+
+        function setManualAmount(amt) {
+            const input = document.getElementById('manual-sol-amount');
+            if (input) {
+                input.value = amt;
+                updateEstimatedTokens();
+            }
+        }
+
+        function executeSwap(mode) {
+            const isSolana = (chainId === 'solana' || chainId === 'sol');
+            if (!isSolana) {
+                window.open(`https://dexscreener.com/${chainId}/${tokenAddr}`, "_blank");
+                return;
+            }
+            
+            const SOL_MINT = "So11111111111111111111111111111111111111112";
+            const cleanCA = tokenAddr.trim();
+            if (cleanCA === SOL_MINT) return;
+
+            // INTEGRASI REFERRAL DARI LOCALSTORAGE (SINKRON DENGAN ADMIN CONFIG)
+            const wallet = localStorage.getItem('dexhunter_jup_wallet') || "4D6pU3X6p1X5wS6uB8uB8uB8uB8uB8uB8uB8uB8uB8uB";
+            const fee = localStorage.getItem('dexhunter_jup_fee') || "50";
+            
+            console.log(`[DEX-HUNTER] Execute Swap: ${symbol} | Mode: ${mode} | Ref: ${wallet} | Fee: ${fee}bps`);
+
+            const amtInput = document.getElementById('manual-sol-amount');
+            const amount = mode === 'BUY' ? (amtInput?.value || 0.1) : 'SELL';
+            
+            let jupUrl = "";
+            if (amount === 'SELL') {
+                jupUrl = `https://jup.ag/swap/${cleanCA}-${SOL_MINT}?referrer=${wallet}&feeBps=${fee}`;
+            } else {
+                jupUrl = `https://jup.ag/swap/${SOL_MINT}-${cleanCA}?referrer=${wallet}&feeBps=${fee}`;
+                if (amount) {
+                    const lamports = Math.floor(parseFloat(amount) * 1000000000);
+                    jupUrl += `&amount=${lamports}`;
+                }
+            }
+            window.open(jupUrl, "JupiterHunter");
+        }
+
+        // Global initialization
+        fetchSolPrice();
+        fetchStats(); 
+        setInterval(fetchStats, 15000);
+        setInterval(fetchSolPrice, 60000);
+
+        // Attach events
+        document.getElementById('btn-buy-full').onclick = () => executeSwap('BUY');
+        document.getElementById('btn-sell-full').onclick = () => executeSwap('SELL');
+        window.updateEstimatedTokens = updateEstimatedTokens;
+        window.setManualAmount = setManualAmount;
+
+        document.getElementById('btn-copy').onclick = () => {
+            navigator.clipboard.writeText(tokenAddr);
+            const b = document.getElementById('btn-copy'); b.innerText = 'COPIED!';
+            setTimeout(() => b.innerText = 'COPY', 2000);
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,53 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isEmailVerified() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isAdmin() {
+      // Hardcoded admin for now as requested by user's context
+      return isEmailVerified() && request.auth.token.email == "ardiblokchine@gmail.com";
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidJupiterSettings(data) {
+      return data.keys().hasAll(['wallet', 'fee', 'updatedAt']) 
+             && data.keys().size() == 3
+             && data.wallet is string && data.wallet.size() >= 0 && data.wallet.size() <= 256
+             && data.fee is int && data.fee >= 0 && data.fee <= 100
+             && data.updatedAt == request.time;
+    }
+
+    match /config/jupiter {
+      allow read: if true; // Dynamic setting needs to be readable by all clients
+      
+      allow create: if isAdmin() && isValidJupiterSettings(incoming());
+      
+      allow update: if isAdmin() 
+                    && isValidJupiterSettings(incoming())
+                    && (incoming().diff(existing()).affectedKeys().hasOnly(['wallet', 'fee', 'updatedAt']));
+    }
+  }
+}

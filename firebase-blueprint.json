@@ -1,0 +1,30 @@
+{
+  "entities": {
+    "JupiterSettings": {
+      "title": "Jupiter Settings",
+      "description": "Configuration for Jupiter Swap referral",
+      "type": "object",
+      "properties": {
+        "wallet": {
+          "type": "string",
+          "description": "Solana wallet address for referrals"
+        },
+        "fee": {
+          "type": "integer",
+          "description": "Fee in basis points (BPS)"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["wallet", "fee"]
+    }
+  },
+  "firestore": {
+    "config/jupiter": {
+      "schema": "JupiterSettings",
+      "description": "Global configuration for Jupiter Swap"
+    }
+  }
+}
