@@ -78,6 +78,12 @@ async function startServer() {
   } else {
     const distPath = path.join(process.cwd(), "dist");
     app.use(express.static(distPath));
+
+    // Handle rute chart secara eksplisit sebelum catch-all
+    app.get("/chart", (req, res) => {
+      res.sendFile(path.join(distPath, "chart.html"));
+    });
+
     app.get("*", (req, res) => {
       res.sendFile(path.join(distPath, "index.html"));
     });
