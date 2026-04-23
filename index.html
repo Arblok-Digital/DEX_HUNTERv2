@@ -1839,11 +1839,11 @@
             try {
                 // Try fetching from local server proxy (Full-stack mode)
                 const res = await fetch('/api/prices');
-                if (res.ok) {
-                    const data = await res.json();
-                    if (data.sol && data.btc) {
-                        applyPrices(data.sol, data.btc);
-                        return;
+                if (res.ok && res.headers.get('content-type')?.includes('application/json')) {
+                    const data = await res.json().catch(() => null);
+                    if (data && data.sol && data.btc) {
+                        applyPrices(Number(data.sol), Number(data.btc));
+                        return; // Berhasil dari backend
                     }
                 }
             } catch (e) {
