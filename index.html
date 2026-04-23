@@ -3,6 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#00ff88">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6">
     <title>DEX_HUNTERv2 | Terminal Berburu Token</title>
     <link rel="icon" href="data:,">
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;700&family=IBM+Plex+Sans:wght@400;600&display=swap" rel="stylesheet">
@@ -448,18 +453,18 @@
             .btn-refresh-text { display: none; }
             .btn-refresh { padding: 4px 8px; min-width: 40px; }
             
-            .filter-bar { padding: 6px 8px; gap: 6px; }
+            .filter-bar { padding: 6px 4px; gap: 4px; }
             .filter-group { min-width: 90px; gap: 4px; }
             .filter-label { font-size: 7px; }
             
-            .feed-container { padding: 6px; gap: 8px; }
-            .token-card { padding: 8px; gap: 6px; border-radius: 8px; }
+            .feed-container { padding: 5px; gap: 6px; }
+            .token-card { padding: 10px 8px; gap: 5px; border-radius: 8px; width: 100%; max-width: 100%; }
             .token-name { font-size: 11px; }
             
             .card-header { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; margin-bottom: 4px; }
             .token-info { flex-shrink: 0; border: none; padding: 0; display: flex; align-items: center; gap: 8px; }
-            .badge-container { width: 100%; justify-content: flex-start; gap: 4px; margin-top: 2px; }
-            .badge { font-size: 6.5px; padding: 1px 3px; }
+            .badge-container { width: 100%; justify-content: flex-start; gap: 2px; margin-top: 2px; } /* Mengurangi jarak antar badge */
+            .badge { font-size: 6px; padding: 0px 2px; } /* Mengurangi ukuran font dan padding badge */
             
             .grid-2 { gap: 4px; }
             .data-point { padding: 4px; border-radius: 4px; }
@@ -473,8 +478,14 @@
             .report-card { padding: 8px !important; margin-bottom: 8px !important; }
             .brain-indicators { padding: 4px !important; margin-top: 4px !important; gap: 4px !important; }
             .alert-links { gap: 4px !important; margin-top: 6px !important; }
-            .alert-link { font-size: 7px !important; padding: 3px 2px !important; min-height: 22px !important; }
+            .alert-link { font-size: 8px !important; padding: 4px 2px !important; min-height: 24px !important; }
             .signal-box { padding: 4px !important; }
+            
+            /* Perbaikan Swap Panel Mobile */
+            .quick-swap-panel { grid-template-columns: repeat(2, 1fr) !important; gap: 4px !important; }
+            .btn-quick { padding: 8px 2px !important; font-size: 10px !important; }
+            .ca-precision-bar { padding: 6px !important; }
+            .ca-precision-bar code { font-size: 9px !important; }
         }
 
         .report-section, .social-card {
@@ -1631,22 +1642,25 @@
 
         // --- JUPITER REDIR LOGIC ---
         function openSwap(tokenAddress, tokenSymbol, chainId, amount = null) {
-          const wallet = JUP.wallet || "4D6pU3X6p1X5wS6uB8uB8uB8uB8uB8uB8uB8uB8uB8uB"; // Safety Fallback
+          // SINKRONISASI DATA DARI CONFIG TERBARU
+          const wallet = localStorage.getItem('dexhunter_jup_wallet') || JUP.wallet || "4D6pU3X6p1X5wS6uB8uB8uB8uB8uB8uB8uB8uB8uB8uB";
           const bps = JUP.fee || 50;
 
-          console.group(`>>> [DEX-HUNTER-V4] SWAP INITIATED: ${tokenSymbol}`);
-          console.log("Token Address:", tokenAddress);
-          console.log("Target Referral Wallet:", wallet);
-          console.log("Fee Bps:", bps);
-          console.log("Amount SOL:", amount || "Manual");
+          // NORMALISASI CHAIN ID
+          const isSolana = (chainId === 'solana' || chainId === 'sol');
           
+          console.group(`>>> [DEX-HUNTER-V4] SWAP ROUTING: ${tokenSymbol}`);
+          console.log("Network:", chainId);
+          console.log("Is Solana:", isSolana);
+          console.log("Wallet Ref:", wallet);
+
           if (tokenAddress === "So11111111111111111111111111111111111111112" || tokenSymbol === "SOL") {
             console.warn("Operation cancelled: Cannot swap SOL to SOL.");
             console.groupEnd();
             return;
           }
 
-          if (chainId && chainId !== "solana" && chainId !== "sol") {
+          if (!isSolana) {
             console.log("Non-Solana Chain detected. Redirecting to DexScreener...");
             window.open(`https://dexscreener.com/${chainId}/${tokenAddress}`, "_blank");
             console.groupEnd();
@@ -4996,6 +5010,15 @@
         setInterval(() => {
             if (currentTab === 'moneyflow') updateMoneyFlowEngine();
         }, 10000);
+
+        // --- PWA SERVICE WORKER REGISTRATION ---
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(reg => console.log('Hunter PWA Ready!', reg.scope))
+                    .catch(err => console.log('PWA Setup Failed:', err));
+            });
+        }
     </script>
 
     <!-- Share Modal -->

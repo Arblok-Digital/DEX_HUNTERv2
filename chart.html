@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#00ff88">
+    <link rel="manifest" href="manifest.json">
     <title>CHART | DEX HUNTER</title>
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;700&family=IBM+Plex+Sans:wght@400;600&display=swap" rel="stylesheet">
     <style>
@@ -67,19 +69,27 @@
         }
         @media (min-width: 600px) { .stats-row { grid-template-columns: repeat(4, 1fr); } }
 
-        .stat-card { background: var(--panel); border: 1px solid var(--border); padding: 8px; border-radius: 6px; text-align: center; }
+        .stat-card { background: var(--panel); border: 1px solid var(--border); padding: 10px; border-radius: 8px; text-align: center; }
         .stat-label { font-size: 8px; color: var(--dim); text-transform: uppercase; margin-bottom: 4px; display: block; font-weight: 800; }
         .stat-value { font-size: 12px; font-weight: 700; color: var(--text-bright); font-family: var(--font-mono); }
 
-        .chart-container { width: 100%; background: #000; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
-        iframe { width: 100%; border: none; height: 45vh; display: block; }
+        /* Layout Grid */
+        .main-container { display: flex; flex-direction: column; gap: 15px; padding: 10px; }
+        @media (min-width: 1000px) {
+            .main-container { display: grid; grid-template-columns: 1fr 360px; gap: 20px; padding: 20px; align-items: start; }
+        }
+
+        .chart-section { display: flex; flex-direction: column; gap: 10px; background: var(--panel); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+        .chart-container { width: 100%; background: #000; border-top: 1px solid var(--border); }
+        iframe { width: 100%; border: none; height: 50vh; display: block; }
+        @media (min-width: 1000px) { iframe { height: 65vh; } }
 
         .tf-selector { 
             display: flex; 
             justify-content: flex-start; 
             gap: 5px; 
-            padding: 10px; 
-            background: var(--panel); 
+            padding: 8px 12px; 
+            background: #050505; 
             overflow-x: auto; 
             scrollbar-width: none; 
             -ms-overflow-style: none;
@@ -101,34 +111,40 @@
         }
         .tf-btn.active { color: var(--green); border-color: var(--green); background: rgba(0, 255, 136, 0.05); }
 
-        .info-section { padding: 10px 15px 20px 15px; }
-        .ca-box { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 8px; margin-bottom: 10px; }
+        /* Trade Panel / Command Center */
+        .trade-section { display: flex; flex-direction: column; gap: 15px; }
+        .command-center { padding: 15px; background: var(--panel); border: 1px solid var(--border); border-radius: 12px; }
+        .sidebar-label { font-size: 9px; color: var(--dim); font-weight: 800; margin-bottom: 8px; display: block; text-transform: uppercase; letter-spacing: 1px; }
+        .sidebar-value { font-family: var(--font-mono); font-weight: 700; font-size: 13px; color: #fff; }
+        
+        .input-group { margin-bottom: 5px; }
+        .manual-buy-input {
+            width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 12px;
+            color: #fff; font-family: var(--font-mono); font-size: 15px; margin-bottom: 12px; outline: none; transition: border 0.2s;
+        }
+        .manual-buy-input:focus { border-color: var(--green); }
+        
+        .btn-sidebar-swap {
+            width: 100%; padding: 14px; border-radius: 8px; font-weight: 900; font-size: 13px; cursor: pointer; border: none;
+            font-family: inherit; margin-bottom: 10px; transition: all 0.2s; text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        .btn-buy-mode { background: #0a2a1a; color: #FFD700; border: 1px solid rgba(0, 255, 136, 0.3) !important; }
+        .btn-sell-mode { background: #2a0a0a; color: #ff3355; border: 1px solid rgba(255, 51, 85, 0.3) !important; }
+        
+        .btn-quick-group { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 15px; }
+        .btn-quick {
+            background: rgba(0,255,136,0.05); color: var(--green); border: 1px solid rgba(0,255,136,0.2);
+            border-radius: 6px; padding: 10px; font-size: 11px; font-weight: 700; cursor: pointer; font-family: inherit;
+        }
+        .btn-quick:hover { background: rgba(0,255,136,0.15); border-color: var(--green); }
+        
+        .est-box { background: rgba(0,255,136,0.03); border: 1px dashed var(--dim); padding: 12px; border-radius: 8px; margin-bottom: 15px; text-align: center; }
+
+        .info-section { display: flex; flex-direction: column; gap: 10px; }
+        .ca-box { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 12px; }
         .ca-header { display: flex; justify-content: space-between; margin-bottom: 8px; align-items: center; }
         .ca-val { font-family: var(--font-mono); font-size: 11px; word-break: break-all; color: var(--text-bright); background: rgba(0,0,0,0.3); padding: 8px; border-radius: 4px; }
         .copy-btn { background: var(--green); border: none; color: #000; padding: 4px 10px; border-radius: 4px; font-size: 10px; cursor: pointer; font-weight: 800; }
-
-        /* Hunter Command Center Styles */
-        .command-center { padding: 8px 12px; background: var(--panel); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); margin: 5px 0; }
-        .sidebar-label { font-size: 9px; color: var(--dim); font-weight: 800; margin-bottom: 5px; display: block; text-transform: uppercase; letter-spacing: 1px; }
-        .sidebar-value { font-family: var(--font-mono); font-weight: 700; font-size: 13px; color: #fff; }
-        .input-group { margin-bottom: 5px; }
-        .manual-buy-input {
-            width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 8px;
-            color: #fff; font-family: var(--font-mono); font-size: 13px; margin-bottom: 8px; outline: none; transition: border 0.2s;
-        }
-        .manual-buy-input:focus { border-color: var(--green); }
-        .btn-sidebar-swap {
-            width: 100%; padding: 10px; border-radius: 6px; font-weight: 800; font-size: 12px; cursor: pointer; border: none;
-            font-family: inherit; margin-bottom: 8px; transition: all 0.2s; text-transform: uppercase;
-        }
-        .btn-buy-mode { background: #0a2a1a; color: #FFD700; border: 1px solid rgba(0, 255, 136, 0.3) !important; }
-        .btn-sell-mode { background: var(--red); color: #fff; }
-        .btn-quick-group { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 15px; }
-        .btn-quick {
-            background: rgba(0,255,136,0.1); color: var(--green); border: 1px solid rgba(0,255,136,0.3);
-            border-radius: 6px; padding: 6px; font-size: 9px; font-weight: 700; cursor: pointer; font-family: inherit; text-align: center;
-        }
-        .est-box { background: rgba(0,255,136,0.05); border: 1px dashed var(--green); padding: 8px; border-radius: 8px; margin-bottom: 10px; }
 
         .external-links { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
         .ext-link {
@@ -166,50 +182,53 @@
             <div class="stat-card"><span class="stat-label">Volume 24H</span><span id="stat-vol" class="stat-value">...</span></div>
         </div>
 
-        <div class="tf-selector">
-            <button class="tf-btn" onclick="setTimeframe('1m')">1M</button>
-            <button class="tf-btn active" onclick="setTimeframe('5m')">5M</button>
-            <button class="tf-btn" onclick="setTimeframe('15m')">15M</button>
-            <button class="tf-btn" onclick="setTimeframe('1h')">1H</button>
-            <button class="tf-btn" onclick="setTimeframe('4h')">4H</button>
-            <button class="tf-btn" onclick="setTimeframe('1d')">1D</button>
-        </div>
-
-        <div class="chart-container"><iframe id="gt-chart"></iframe></div>
-
-        <!-- Integrated Hunter Command Center -->
-        <section class="command-center">
-            <div class="sidebar-label">HUNTER COMMAND CENTER (LIVE)</div>
-            
-            <div class="input-group">
-                <input type="number" id="manual-sol-amount" class="manual-buy-input" placeholder="0.1" step="0.1" value="0.1" oninput="updateEstimatedTokens()">
-                
-                <div class="btn-quick-group">
-                    <button class="btn-quick" onclick="setManualAmount(0.1)">0.1 SOL</button>
-                    <button class="btn-quick" onclick="setManualAmount(0.5)">0.5 SOL</button>
-                    <button class="btn-quick" onclick="setManualAmount(1.0)">1.0 SOL</button>
+        <div class="main-container">
+            <!-- Left: Chart -->
+            <div class="chart-section">
+                <div class="tf-selector">
+                    <button class="tf-btn" onclick="setTimeframe('1m')">1M</button>
+                    <button class="tf-btn active" onclick="setTimeframe('5m')">5M</button>
+                    <button class="tf-btn" onclick="setTimeframe('15m')">15M</button>
+                    <button class="tf-btn" onclick="setTimeframe('1h')">1H</button>
+                    <button class="tf-btn" onclick="setTimeframe('4h')">4H</button>
+                    <button class="tf-btn" onclick="setTimeframe('1d')">1D</button>
                 </div>
+                <div class="chart-container"><iframe id="gt-chart"></iframe></div>
+            </div>
 
-                <div class="est-box">
-                    <div class="sidebar-label" style="color:var(--green)">ESTIMATED RECEIVED</div>
-                    <div id="sidebar-est-tokens" class="sidebar-value" style="font-size:16px;">≈ 0.00 ...</div>
+            <!-- Right: Trading & Info -->
+            <div class="trade-section">
+                <section class="command-center">
+                    <div class="sidebar-label">HUNTER COMMAND CENTER (LIVE)</div>
+                    <div class="input-group">
+                        <input type="number" id="manual-sol-amount" class="manual-buy-input" placeholder="0.1" step="0.1" value="0.1" oninput="updateEstimatedTokens()">
+                        <div class="btn-quick-group">
+                            <button class="btn-quick" onclick="setManualAmount(0.1)">0.1 SOL</button>
+                            <button class="btn-quick" onclick="setManualAmount(0.5)">0.5 SOL</button>
+                            <button class="btn-quick" onclick="setManualAmount(1.0)">1.0 SOL</button>
+                        </div>
+                        <div class="est-box">
+                            <div class="sidebar-label" style="color:var(--green); margin-bottom: 4px;">ESTIMATED RECEIVED</div>
+                            <div id="sidebar-est-tokens" class="sidebar-value" style="font-size:16px; color: var(--text-bright);">≈ 0.00 ...</div>
+                        </div>
+                        <button class="btn-sidebar-swap btn-buy-mode" id="btn-buy-full">⚡ EXECUTE SWAP (BUY)</button>
+                        <button class="btn-sidebar-swap btn-sell-mode" id="btn-sell-full">💀 DUMP 100% (SELL)</button>
+                    </div>
+                </section>
+
+                <div class="info-section">
+                    <div class="ca-box">
+                        <div class="ca-header"><span class="stat-label">Contract Address</span><button class="copy-btn" id="btn-copy">COPY</button></div>
+                        <div id="token-ca" class="ca-val">...</div>
+                    </div>
+                    <div class="external-links">
+                        <a id="link-dexs" href="#" target="_blank" class="ext-link">DEXSCREENER</a>
+                        <a id="link-birdeye" href="#" target="_blank" class="ext-link">BIRDEYE</a>
+                    </div>
                 </div>
-
-                <button class="btn-sidebar-swap btn-buy-mode" id="btn-buy-full">⚡ EXECUTE SWAP (BUY)</button>
-                <button class="btn-sidebar-swap btn-sell-mode" id="btn-sell-full">💀 DUMP 100% (SELL)</button>
-            </div>
-        </section>
-
-        <div class="info-section">
-            <div class="ca-box">
-                <div class="ca-header"><span class="stat-label">Contract Address</span><button class="copy-btn" id="btn-copy">COPY</button></div>
-                <div id="token-ca" class="ca-val">...</div>
-            </div>
-            <div class="external-links">
-                <a id="link-dexs" href="#" target="_blank" class="ext-link">DEXSCREENER</a>
-                <a id="link-birdeye" href="#" target="_blank" class="ext-link">BIRDEYE</a>
             </div>
         </div>
+    </main>
 
     <script>
         const params = new URLSearchParams(window.location.search);
@@ -306,7 +325,7 @@
         function executeSwap(mode) {
             const isSolana = (chainId === 'solana' || chainId === 'sol');
             if (!isSolana) {
-                window.open(`https://dexscreener.com/${chainId}/${tokenAddr}`, "_blank");
+                window.open(`https://dexscreener.com/${chainId || 'solana'}/${tokenAddr}`, "_blank");
                 return;
             }
             

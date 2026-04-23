@@ -1,0 +1,20 @@
+{
+  "short_name": "HUNTER",
+  "name": "DEX_HUNTERv2 Terminal",
+  "description": "Institutional-Grade On-Chain Terminal for Solana & EVM",
+  "icons": [
+    {
+      "src": "https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": "/index.html",
+  "display": "standalone",
+  "theme_color": "#00ff88",
+  "background_color": "#000000",
+  "orientation": "portrait",
+  "scope": "/",
+  "categories": ["finance", "trading"]
+}
